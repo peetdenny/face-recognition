@@ -2,6 +2,7 @@ import os
 import numpy
 from PIL import Image
 import properties
+import image_processor as processor
 
 directories = {
 	0: 'images/raw/bex/',
@@ -13,16 +14,11 @@ size = properties.image_size
 def load_files(label, directory):
 	images = []
 	for f in os.listdir(directory):
-		img = Image.open(directory+f)
-		img = img.convert('L')
-		img = img.resize(size)
-		img_as_row = numpy.asarray(img)
-		img_as_row = img_as_row.reshape(-1)
-		images.append(img_as_row)
+		img = processor.pipeline(Image.open(directory + f))
+		images.append(processor.convert_to_array(img))
+
 	images_mat = numpy.asarray(images)
-	lab_mat = numpy.empty((images_mat.shape[0], 1))
-	lab_mat.fill(label)
-	images_mat = numpy.c_[lab_mat, images_mat]
+	images_mat = processor.add_label(images_mat, label)
 	return images_mat
 
 
@@ -46,5 +42,6 @@ def create_training_data():
 	save_data(splits[0], properties.training_data_filename)
 	save_data(splits[1], properties.test_data_filename)
 
-
 create_training_data()
+
+
